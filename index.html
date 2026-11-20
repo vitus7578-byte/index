@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Makmal Ukur Kejuruteraan — JKA</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f0f4f8;
+      --sidebar-bg: #1a2744;
+      --sidebar-active: #2563eb;
+      --sidebar-hover: #243461;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --muted: #64748b;
+      --accent: #2563eb;
+      --green: #16a34a;
+      --yellow: #d97706;
+      --red: #dc2626;
+      --purple: #7c3aed;
+      --header-h: 56px;
+      --sidebar-w: 240px;
+    }
+
+    body { font-family: -apple-system, "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
+
+    /* ── HEADER ── */
+    header {
+      position: fixed; top: 0; left: 0; right: 0; height: var(--header-h);
+      background: var(--sidebar-bg); color: #fff;
+      display: flex; align-items: center; padding: 0 20px;
+      z-index: 100; gap: 14px;
+    }
+    header .logo { font-size: 18px; font-weight: 700; letter-spacing: .5px; }
+    header .logo span { color: #60a5fa; }
+    header .sub { font-size: 12px; color: #94a3b8; margin-top: 1px; }
+    header .spacer { flex: 1; }
+    header .user { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+    header .user .avatar { width: 32px; height: 32px; border-radius: 50%; background: #2563eb; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; }
+
+    /* ── SIDEBAR ── */
+    nav {
+      position: fixed; top: var(--header-h); left: 0; bottom: 0; width: var(--sidebar-w);
+      background: var(--sidebar-bg); overflow-y: auto; padding: 12px 0;
+      z-index: 90;
+    }
+    nav .section-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #475569; padding: 10px 18px 4px; }
+    nav a {
+      display: flex; align-items: center; gap: 10px; padding: 9px 18px;
+      color: #94a3b8; text-decoration: none; font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: background .15s, color .15s;
+    }
+    nav a:hover { background: var(--sidebar-hover); color: #e2e8f0; }
+    nav a.active { background: var(--sidebar-active); color: #fff; }
+    nav a .icon { width: 18px; text-align: center; flex-shrink: 0; }
+    nav a .badge { margin-left: auto; background: #ef4444; color: #fff; font-size: 10px; padding: 1px 6px; border-radius: 999px; }
+
+    /* ── MAIN ── */
+    main {
+      margin-left: var(--sidebar-w);
+      margin-top: var(--header-h);
+      padding: 24px;
+      min-height: calc(100vh - var(--header-h));
+    }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── PAGE TITLE ── */
+    .page-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+    .page-desc { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+
+    /* ── CARDS ── */
+    .cards { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); margin-bottom: 24px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+    .card .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+    .card .value { font-size: 28px; font-weight: 700; line-height: 1; }
+    .card .value.green { color: var(--green); }
+    .card .value.yellow { color: var(--yellow); }
+    .card .value.red { color: var(--red); }
+    .card .value.blue { color: var(--accent); }
+    .card .value.purple { color: var(--purple); }
+    .card .sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .card .icon-big { font-size: 28px; float: right; opacity: .15; margin-top: -4px; }
+
+    /* ── TABLE ── */
+    .table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .table-wrap .toolbar { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+    .table-wrap .toolbar h3 { font-size: 15px; font-weight: 600; flex: 1; }
+    input[type=text], input[type=date], select, textarea {
+      border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px;
+      font-size: 13px; outline: none; background: #fff; color: var(--text);
+    }
+    input[type=text]:focus, input[type=date]:focus, select:focus, textarea:focus { border-color: var(--accent); }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #f8fafc; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); font-weight: 600; white-space: nowrap; }
+    td { padding: 10px 14px; border-bottom: 1px solid #f1f5f9; font-size: 13px; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8fafc; }
+
+    .badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+    .badge.green { background: #dcfce7; color: #15803d; }
+    .badge.yellow { background: #fef9c3; color: #a16207; }
+    .badge.red { background: #fee2e2; color: #b91c1c; }
+    .badge.blue { background: #dbeafe; color: #1d4ed8; }
+    .badge.purple { background: #ede9fe; color: #6d28d9; }
+    .badge.gray { background: #f1f5f9; color: #475569; }
+
+    /* ── BUTTON ── */
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-success { background: var(--green); color: #fff; }
+    .btn-success:hover { background: #15803d; }
+    .btn-danger { background: var(--red); color: #fff; }
+    .btn-outline { background: #fff; color: var(--text); border: 1px solid var(--border); }
+    .btn-outline:hover { background: #f8fafc; }
+    .btn-sm { padding: 4px 10px; font-size: 12px; }
+
+    /* ── FORM ── */
+    .form-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-group label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; }
+    .form-section { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+    .form-section h3 { font-size: 14px; font-weight: 700; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); color: var(--accent); }
+    .form-actions { display: flex; gap: 10px; margin-top: 6px; }
+
+    /* ── MODAL ── */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: #fff; border-radius: 12px; width: 90%; max-width: 580px; max-height: 90vh; overflow-y: auto; padding: 24px; }
+    .modal h2 { font-size: 17px; font-weight: 700; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+
+    /* ── ALERT ── */
+    .alert { display: flex; gap: 10px; padding: 12px 16px; border-radius: 8px; font-size: 13px; margin-bottom: 14px; }
+    .alert.warning { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+    .alert.danger { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+    .alert.info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
+
+    /* ── PROGRESS ── */
+    .progress-bar { background: #e2e8f0; border-radius: 999px; height: 8px; overflow: hidden; }
+    .progress-bar .fill { height: 100%; border-radius: 999px; background: var(--accent); }
+
+    /* ── RESPONSIVE ── */
+    @media(max-width: 768px) {
+      nav { transform: translateX(-100%); }
+      main { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div>
+    <div class="logo">Makmal Ukur <span>JKA</span></div>
+    <div class="sub">Sistem Pengurusan Makmal Ukur Kejuruteraan</div>
+  </div>
+  <div class="spacer"></div>
+  <div class="user">
+    <div class="avatar">AM</div>
+    <div>
+      <div style="font-weight:600;font-size:13px;">Abdul Majid</div>
+      <div style="font-size:11px;color:#94a3b8;">JK(O)3 · Lab Officer</div>
+    </div>
+  </div>
+</header>
+
+<!-- SIDEBAR -->
+<nav>
+  <div class="section-label">Utama</div>
+  <a class="active" onclick="showPage('dashboard')"><span class="icon">📊</span> Dashboard</a>
+
+  <div class="section-label">Pengurusan Alat</div>
+  <a onclick="showPage('inventori')"><span class="icon">📦</span> Inventori Aset</a>
+  <a onclick="showPage('pinjam')"><span class="icon">📋</span> Peminjaman Alat <span class="badge" id="badge-pinjam">3</span></a>
+  <a onclick="showPage('pulang')"><span class="icon">🔄</span> Pemulangan Alat</a>
+
+  <div class="section-label">Penyelenggaraan</div>
+  <a onclick="showPage('kalibrasi')"><span class="icon">🔧</span> Kalibrasi & Selenggara <span class="badge" id="badge-kalib">8</span></a>
+  <a onclick="showPage('semak')"><span class="icon">✅</span> Senarai Semak Makmal</a>
+
+  <div class="section-label">Laporan</div>
+  <a onclick="showPage('laporan')"><span class="icon">📈</span> Laporan & Statistik</a>
+
+  <div class="section-label">Pentadbiran</div>
+  <a onclick="resetSemuaData()" style="color:#f87171;"><span class="icon">🗑️</span> Reset Semua Data</a>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main>
+
+  <!-- ══════════════════════════════════════════
+       PAGE: DASHBOARD
+  ══════════════════════════════════════════ -->
+  <div class="page active" id="page-dashboard">
+    <div class="page-title">Dashboard Utama</div>
+    <div class="page-desc">Makmal Ukur Kejuruteraan — Jabatan Kejuruteraan Awam (JKA)</div>
+
+    <div class="alert warning">⚠️ <strong>Perhatian:</strong> 8 unit alat memerlukan kalibrasi semula (Nikon DTM-352 & DTM-821). Tarikh akhir kalibrasi: Dis 2012.</div>
+
+    <div class="cards">
+      <div class="card">
+        <div class="icon-big">📦</div>
+        <div class="label">Jumlah Aset Berdaftar</div>
+        <div class="value blue">83</div>
+        <div class="sub">22 kategori peralatan</div>
+      </div>
+      <div class="card">
+        <div class="icon-big">✅</div>
+        <div class="label">Alat Tersedia</div>
+        <div class="value green">67</div>
+        <div class="sub">Boleh dipinjam</div>
+      </div>
+      <div class="card">
+        <div class="icon-big">📋</div>
+        <div class="label">Sedang Dipinjam</div>
+        <div class="value yellow">12</div>
+        <div class="sub">3 transaksi aktif</div>
+      </div>
+      <div class="card">
+        <div class="icon-big">⚠️</div>
+        <div class="label">Perlu Kalibrasi</div>
+        <div class="value red">8</div>
+        <div class="sub">DTM-352 & DTM-821</div>
+      </div>
+      <div class="card">
+        <div class="icon-big">🔧</div>
+        <div class="label">Penyelenggaraan</div>
+        <div class="value purple">4</div>
+        <div class="sub">Dijadualkan bulan ini</div>
+      </div>
+    </div>
+
+    <!-- Active Loans -->
+    <div class="table-wrap" style="margin-bottom:20px;">
+      <div class="toolbar">
+        <h3>📋 Peminjaman Aktif Hari Ini</h3>
+        <button class="btn btn-primary" onclick="showPage('pinjam')">+ Pinjaman Baru</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>No. Permohonan</th>
+            <th>Peminjam</th>
+            <th>Alat Dipinjam</th>
+            <th>Tarikh Pinjam</th>
+            <th>Jangka Pulang</th>
+            <th>Status</th>
+            <th>Tindakan</th>
+          </tr>
+        </thead>
+        <tbody id="dash-pinjam-tbody">
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Quick Stats -->
+    <div style="display:grid;gap:16px;grid-template-columns:1fr 1fr;">
+      <div class="table-wrap">
+        <div class="toolbar"><h3>📊 Status Inventori Mengikut Kategori</h3></div>
+        <table>
+          <thead><tr><th>Kategori</th><th>Total</th><th>Tersedia</th><th>Dipinjam</th></tr></thead>
+          <tbody>
+            <tr><td>Theodolite (Digital)</td><td>9</td><td>6</td><td>3</td></tr>
+            <tr><td>Automatic Level</td><td>14</td><td>14</td><td>0</td></tr>
+            <tr><td>Total Station</td><td>8</td><td>5</td><td>3</td></tr>
+            <tr><td>Electronic Level</td><td>4</td><td>4</td><td>0</td></tr>
+            <tr><td>GPS</td><td>2</td><td>2</td><td>0</td></tr>
+            <tr><td>Digital Planimeter</td><td>8</td><td>8</td><td>0</td></tr>
+            <tr><td>Walkie Talkie</td><td>9</td><td>9</td><td>0</td></tr>
+            <tr><td>Kompas</td><td>7</td><td>7</td><td>0</td></tr>
+            <tr><td>Lain-lain</td><td>22</td><td>12</td><td>6</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-wrap">
+        <div class="toolbar"><h3>🔧 Alat Perlu Kalibrasi (KEW.PA-14)</h3></div>
+        <table>
+          <thead><tr><th>Alat</th><th>Tarikh Akhir</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Nikon DTM-821 (KPT/PKK/H/03/324)</td><td>14/12/2012</td><td><span class="badge red">Perlu Kalibrasi</span></td></tr>
+            <tr><td>Nikon DTM-821 (KPT/PKK/H/03/325)</td><td>14/12/2012</td><td><span class="badge red">Perlu Kalibrasi</span></td></tr>
+            <tr><td>Nikon DTM-352 EDM (KPT/PKK/H/03/318)</td><td>15/12/2012</td><td><span class="badge red">Perlu Kalibrasi</span></td></tr>
+            <tr><td>Nikon DTM-352 EDM (KPT/PKK/H/03/319)</td><td>15/12/2012</td><td><span class="badge red">Perlu Kalibrasi</span></td></tr>
+            <tr><td>Nikon DTM-352 EDM (KPT/PKK/H/03/320)</td><td>15/12/2012</td><td><span class="badge red">Perlu Kalibrasi</span></td></tr>
+            <tr><td>Nikon DTM-352 EDM (KPT/PKK/H/03/321)</td><td>15/12/2012</td><td><span class="badge red">Perlu Kalibrasi</span></td></tr>
+            <tr><td>Nikon DTM-352 EDM (KPT/PKK/H/03/322)</td><td>15/12/2012</td><td><span class="badge red">Perlu Kalibrasi</span></td></tr>
+            <tr><td>Nikon DTM-352 EDM (KPT/PKK/H/03/323)</td><td>15/12/2012</td><td><span class="badge red">Perlu Kalibrasi</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       PAGE: INVENTORI
+  ══════════════════════════════════════════ -->
+  <div class="page" id="page-inventori">
+    <div class="page-title">Inventori Aset Alih</div>
+    <div class="page-desc">Senarai lengkap 83 unit peralatan berdaftar — Makmal Ukur Kejuruteraan JKA (KEW.PA-7)</div>
+
+    <div class="cards">
+      <div class="card"><div class="label">Jumlah Unit</div><div class="value blue">83</div></div>
+      <div class="card"><div class="label">Tersedia</div><div class="value green">67</div></div>
+      <div class="card"><div class="label">Dipinjam</div><div class="value yellow">12</div></div>
+      <div class="card"><div class="label">Penyelenggaraan/Rosak</div><div class="value red">4</div></div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="toolbar">
+        <h3>📦 Senarai Peralatan</h3>
+        <input type="text" id="cari-inventori" placeholder="Cari alat atau no. siri..." style="width:220px;" oninput="filterInventori()" />
+        <select id="filter-kategori" onchange="filterInventori()" style="width:180px;">
+          <option value="">Semua Kategori</option>
+          <option>Theodolite</option>
+          <option>Automatic Level</option>
+          <option>Electronic Level</option>
+          <option>Dumpy Level</option>
+          <option>Total Station</option>
+          <option>GPS</option>
+          <option>Digital Planimeter</option>
+          <option>Walkie Talkie</option>
+          <option>Kompas</option>
+          <option>Altimeter</option>
+          <option>Lain-lain</option>
+          <option>Aksesori</option>
+        </select>
+        <button class="btn btn-primary" onclick="openModal('modal-tambah-aset')">+ Tambah Aset</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Bil</th>
+            <th>No. Siri Pendaftaran</th>
+            <th>Keterangan Aset</th>
+            <th>Kategori</th>
+            <th>Status</th>
+            <th>Kalibrasi</th>
+            <th>Tindakan</th>
+          </tr>
+        </thead>
+        <tbody id="inventori-tbody">
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       PAGE: PEMINJAMAN
+  ══════════════════════════════════════════ -->
+  <div class="page" id="page-pinjam">
+    <div class="page-title">Peminjaman Alat</div>
+    <div class="page-desc">Borang Permohonan Pergerakan / Pinjaman Aset Alih — KEW.PA-9</div>
+
+    <div class="form-section">
+      <h3>📋 MAKLUMAT PEMOHON (KEW.PA-9)</h3>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>No. Permohonan</label>
+          <input type="text" value="PA9-2025-004" readonly style="background:#f8fafc;" />
+        </div>
+        <div class="form-group">
+          <label>Tarikh Permohonan</label>
+          <input type="date" id="tarikh-pinjam" value="2025-11-20" />
+        </div>
+        <div class="form-group">
+          <label>Nama Pemohon</label>
+          <input type="text" id="nama-pemohon" placeholder="cth: Ahmad bin Ali" />
+        </div>
+        <div class="form-group">
+          <label>Jawatan / Kumpulan</label>
+          <input type="text" id="jawatan-pemohon" placeholder="cth: Pelajar / JK(O)3" />
+        </div>
+        <div class="form-group">
+          <label>No. Matrik / ID</label>
+          <input type="text" id="no-matrik" placeholder="cth: 23DKA12345" />
+        </div>
+        <div class="form-group">
+          <label>Kursus / Amali</label>
+          <select id="kursus">
+            <option>DCC20303 — Ukur Kejuruteraan</option>
+            <option>Amali Levelling</option>
+            <option>Amali Traverse Survey</option>
+            <option>Amali Setting Out</option>
+            <option>Lain-lain</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Tujuan Pinjaman</label>
+          <input type="text" id="tujuan" placeholder="cth: Amali Ukur Traverse" />
+        </div>
+        <div class="form-group">
+          <label>Tempat Digunakan</label>
+          <input type="text" id="tempat" placeholder="cth: Padang Kawad / Luar Kampus" />
+        </div>
+        <div class="form-group">
+          <label>Tarikh Jangka Pulang</label>
+          <input type="date" id="jangka-pulang" value="2025-11-20" />
+        </div>
+        <div class="form-group">
+          <label>Masa Jangka Pulang</label>
+          <input type="text" id="masa-pulang" placeholder="cth: 5:00 ptg" value="5:00 ptg" />
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>🔧 SENARAI ALAT DIPINJAM</h3>
+      <div style="margin-bottom:12px;">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+          <div class="form-group" style="min-width:300px;">
+            <label>Pilih Alat</label>
+            <select id="pilih-alat">
+              <option value="">-- Pilih Alat --</option>
+              <optgroup label="── TOTAL STATION ──">
+              <option value="KPT/PKK/H/03/318|Total Station Nikon DTM-352">KPT/PKK/H/03/318 — Total Station Nikon DTM-352</option>
+              <option value="KPT/PKK/H/03/319|Total Station Nikon DTM-352">KPT/PKK/H/03/319 — Total Station Nikon DTM-352</option>
+              <option value="KPT/PKK/H/03/320|Total Station Nikon DTM-352">KPT/PKK/H/03/320 — Total Station Nikon DTM-352</option>
+              <option value="KPT/PKK/H/03/321|Total Station Nikon DTM-352">KPT/PKK/H/03/321 — Total Station Nikon DTM-352</option>
+              <option value="KPT/PKK/H/03/322|Total Station Nikon DTM-352">KPT/PKK/H/03/322 — Total Station Nikon DTM-352</option>
+              <option value="KPT/PKK/H/03/323|Total Station Nikon DTM-352">KPT/PKK/H/03/323 — Total Station Nikon DTM-352</option>
+              <option value="KPT/PKK/H/03/324|Integrated Total Station Nikon DTM-821">KPT/PKK/H/03/324 — Integrated Total Station Nikon DTM-821</option>
+              <option value="KPT/PKK/H/03/325|Integrated Total Station Nikon DTM-821">KPT/PKK/H/03/325 — Integrated Total Station Nikon DTM-821</option>
+              </optgroup>
+              <optgroup label="── THEODOLITE ──">
+              <option value="KPT/PKK/H/03/326|Digital Theodolite Sokkia DT600">KPT/PKK/H/03/326 — Theodolite Digital Sokkia DT600</option>
+              <option value="KPT/PKK/H/03/327|Digital Theodolite Sokkia DT600">KPT/PKK/H/03/327 — Theodolite Digital Sokkia DT600</option>
+              <option value="KPT/PKK/H/03/328|Digital Theodolite Sokkia DT600">KPT/PKK/H/03/328 — Theodolite Digital Sokkia DT600</option>
+              <option value="KPT/PKK/H/03/329|Digital Theodolite Sokkia DT600">KPT/PKK/H/03/329 — Theodolite Digital Sokkia DT600</option>
+              <option value="KPT/PKK/H/03/330|Digital Theodolite Sokkia DT600">KPT/PKK/H/03/330 — Theodolite Digital Sokkia DT600</option>
+              <option value="KPT/PKK/H/03/350|Micrometer Theodolite Sokkia TM20E">KPT/PKK/H/03/350 — Theodolite Sokkia TM20E</option>
+              <option value="KPT/PKK/H/03/351|Micrometer Theodolite Sokkia TM20E">KPT/PKK/H/03/351 — Theodolite Sokkia TM20E</option>
+              </optgroup>
+              <optgroup label="── AUTOMATIC LEVEL ──">
+              <option value="KPT/PKK/H/03/869|Automatic Level Sokkia C330">KPT/PKK/H/03/869 — Automatic Level Sokkia C330</option>
+              <option value="KPT/PKK/H/03/870|Automatic Level Sokkia C330">KPT/PKK/H/03/870 — Automatic Level Sokkia C330</option>
+              <option value="KPT/PKK/H/03/871|Automatic Level Sokkia C330">KPT/PKK/H/03/871 — Automatic Level Sokkia C330</option>
+              <option value="KPT/PKK/H/03/872|Automatic Level Sokkia C330">KPT/PKK/H/03/872 — Automatic Level Sokkia C330</option>
+              <option value="KPT/PKK/H/03/873|Electronic Digital Level Sokkia SDL30">KPT/PKK/H/03/873 — Electronic Digital Level Sokkia SDL30</option>
+              <option value="KPT/PKK/H/03/874|Electronic Digital Level Sokkia SDL30">KPT/PKK/H/03/874 — Electronic Digital Level Sokkia SDL30</option>
+              <option value="KPT/PKK/H/96/5|Automatic Level Pentax AL-220">KPT/PKK/H/96/5 — Automatic Level Pentax AL-220</option>
+              <option value="KPT/PKK/H/96/6|Automatic Level Pentax AL-220">KPT/PKK/H/96/6 — Automatic Level Pentax AL-220</option>
+              </optgroup>
+              <optgroup label="── GPS / KOMPAS / WALKIE TALKIE ──">
+              <option value="KPT/PKK/H/15/10|GPS Garmin Montana 650">KPT/PKK/H/15/10 — GPS Garmin Montana 650</option>
+              <option value="KPT/PKK/H/15/11|GPS Garmin Montana 650">KPT/PKK/H/15/11 — GPS Garmin Montana 650</option>
+              <option value="KPT/PKK/H/03/877|Walkie Talkie Motorola GP1200">KPT/PKK/H/03/877 — Walkie Talkie Motorola GP1200</option>
+              <option value="KPT/PKK/H/03/878|Walkie Talkie Motorola GP1200">KPT/PKK/H/03/878 — Walkie Talkie Motorola GP1200</option>
+              <option value="KPT/PKK/H/03/879|Walkie Talkie Motorola GP1200">KPT/PKK/H/03/879 — Walkie Talkie Motorola GP1200</option>
+              <option value="KPT/PKK/H/03/880|Walkie Talkie Motorola GP1200">KPT/PKK/H/03/880 — Walkie Talkie Motorola GP1200</option>
+              <option value="KPT/PKK/H/15/8|Walkie Talkie Kirisun PT3300">KPT/PKK/H/15/8 — Walkie Talkie Kirisun PT3300</option>
+              <option value="KPT/PKK/H/15/9|Walkie Talkie Kirisun PT3300">KPT/PKK/H/15/9 — Walkie Talkie Kirisun PT3300</option>
+              <option value="KPT/PKK/H/14/87|Prismatic Compass Stanley London">KPT/PKK/H/14/87 — Prismatic Compass Stanley London</option>
+              <option value="KPT/PKK/H/14/88|Prismatic Compass Stanley London">KPT/PKK/H/14/88 — Prismatic Compass Stanley London</option>
+              <option value="KPT/PKK/H/96/14|Kompas Sokkia PC2">KPT/PKK/H/96/14 — Kompas Sokkia PC2</option>
+              </optgroup>
+              <optgroup label="── AKSESORI AMALI (Tanpa No. Daftar KEW.PA) ──">
+              <option value="JKA/AKS/TRP-01|Tripod (Unit 1)">JKA/AKS/TRP-01 — Tripod (Unit 1)</option>
+              <option value="JKA/AKS/TRP-02|Tripod (Unit 2)">JKA/AKS/TRP-02 — Tripod (Unit 2)</option>
+              <option value="JKA/AKS/TRP-03|Tripod (Unit 3)">JKA/AKS/TRP-03 — Tripod (Unit 3)</option>
+              <option value="JKA/AKS/TRP-04|Tripod (Unit 4)">JKA/AKS/TRP-04 — Tripod (Unit 4)</option>
+              <option value="JKA/AKS/TRP-05|Tripod (Unit 5)">JKA/AKS/TRP-05 — Tripod (Unit 5)</option>
+              <option value="JKA/AKS/TRP-06|Tripod (Unit 6)">JKA/AKS/TRP-06 — Tripod (Unit 6)</option>
+              <option value="JKA/AKS/LST-01|Levelling Staff (Unit 1)">JKA/AKS/LST-01 — Levelling Staff (Unit 1)</option>
+              <option value="JKA/AKS/LST-02|Levelling Staff (Unit 2)">JKA/AKS/LST-02 — Levelling Staff (Unit 2)</option>
+              <option value="JKA/AKS/LST-03|Levelling Staff (Unit 3)">JKA/AKS/LST-03 — Levelling Staff (Unit 3)</option>
+              <option value="JKA/AKS/LST-04|Levelling Staff (Unit 4)">JKA/AKS/LST-04 — Levelling Staff (Unit 4)</option>
+              <option value="JKA/AKS/LST-05|Levelling Staff (Unit 5)">JKA/AKS/LST-05 — Levelling Staff (Unit 5)</option>
+              <option value="JKA/AKS/LST-06|Levelling Staff (Unit 6)">JKA/AKS/LST-06 — Levelling Staff (Unit 6)</option>
+              <option value="JKA/AKS/PRM-01|Prism / Reflector (Unit 1)">JKA/AKS/PRM-01 — Prism / Reflector (Unit 1)</option>
+              <option value="JKA/AKS/PRM-02|Prism / Reflector (Unit 2)">JKA/AKS/PRM-02 — Prism / Reflector (Unit 2)</option>
+              <option value="JKA/AKS/PRM-03|Prism / Reflector (Unit 3)">JKA/AKS/PRM-03 — Prism / Reflector (Unit 3)</option>
+              <option value="JKA/AKS/PRM-04|Prism / Reflector (Unit 4)">JKA/AKS/PRM-04 — Prism / Reflector (Unit 4)</option>
+              <option value="JKA/AKS/PRM-05|Prism / Reflector (Unit 5)">JKA/AKS/PRM-05 — Prism / Reflector (Unit 5)</option>
+              <option value="JKA/AKS/PRM-06|Prism / Reflector (Unit 6)">JKA/AKS/PRM-06 — Prism / Reflector (Unit 6)</option>
+              <option value="JKA/AKS/RRP-01|Ranging Rod / Pole (Unit 1)">JKA/AKS/RRP-01 — Ranging Rod / Pole (Unit 1)</option>
+              <option value="JKA/AKS/RRP-02|Ranging Rod / Pole (Unit 2)">JKA/AKS/RRP-02 — Ranging Rod / Pole (Unit 2)</option>
+              <option value="JKA/AKS/RRP-03|Ranging Rod / Pole (Unit 3)">JKA/AKS/RRP-03 — Ranging Rod / Pole (Unit 3)</option>
+              <option value="JKA/AKS/RRP-04|Ranging Rod / Pole (Unit 4)">JKA/AKS/RRP-04 — Ranging Rod / Pole (Unit 4)</option>
+              <option value="JKA/AKS/RRP-05|Ranging Rod / Pole (Unit 5)">JKA/AKS/RRP-05 — Ranging Rod / Pole (Unit 5)</option>
+              <option value="JKA/AKS/RRP-06|Ranging Rod / Pole (Unit 6)">JKA/AKS/RRP-06 — Ranging Rod / Pole (Unit 6)</option>
+              <option value="JKA/AKS/SFB-01|Staff Bubble (Unit 1)">JKA/AKS/SFB-01 — Staff Bubble (Unit 1)</option>
+              <option value="JKA/AKS/SFB-02|Staff Bubble (Unit 2)">JKA/AKS/SFB-02 — Staff Bubble (Unit 2)</option>
+              <option value="JKA/AKS/SFB-03|Staff Bubble (Unit 3)">JKA/AKS/SFB-03 — Staff Bubble (Unit 3)</option>
+              <option value="JKA/AKS/SFB-04|Staff Bubble (Unit 4)">JKA/AKS/SFB-04 — Staff Bubble (Unit 4)</option>
+              <option value="JKA/AKS/MTP-01|Measuring Tape 30m (Unit 1)">JKA/AKS/MTP-01 — Measuring Tape 30m (Unit 1)</option>
+              <option value="JKA/AKS/MTP-02|Measuring Tape 30m (Unit 2)">JKA/AKS/MTP-02 — Measuring Tape 30m (Unit 2)</option>
+              <option value="JKA/AKS/MTP-03|Measuring Tape 50m (Unit 1)">JKA/AKS/MTP-03 — Measuring Tape 50m (Unit 1)</option>
+              <option value="JKA/AKS/MTP-04|Measuring Tape 50m (Unit 2)">JKA/AKS/MTP-04 — Measuring Tape 50m (Unit 2)</option>
+              <option value="JKA/AKS/ARW-01|Arrow (Set 1)">JKA/AKS/ARW-01 — Arrow (Set 1)</option>
+              <option value="JKA/AKS/ARW-02|Arrow (Set 2)">JKA/AKS/ARW-02 — Arrow (Set 2)</option>
+              <option value="JKA/AKS/ARW-03|Arrow (Set 3)">JKA/AKS/ARW-03 — Arrow (Set 3)</option>
+              <option value="JKA/AKS/PEG-01|Wooden Pickets / Peg (Set 1)">JKA/AKS/PEG-01 — Wooden Pickets / Peg (Set 1)</option>
+              <option value="JKA/AKS/PEG-02|Wooden Pickets / Peg (Set 2)">JKA/AKS/PEG-02 — Wooden Pickets / Peg (Set 2)</option>
+              <option value="JKA/AKS/PEG-03|Wooden Pickets / Peg (Set 3)">JKA/AKS/PEG-03 — Wooden Pickets / Peg (Set 3)</option>
+              <option value="JKA/AKS/HMR-01|Hammer (Unit 1)">JKA/AKS/HMR-01 — Hammer (Unit 1)</option>
+              <option value="JKA/AKS/HMR-02|Hammer (Unit 2)">JKA/AKS/HMR-02 — Hammer (Unit 2)</option>
+              <option value="JKA/AKS/HMR-03|Hammer (Unit 3)">JKA/AKS/HMR-03 — Hammer (Unit 3)</option>
+              <option value="JKA/AKS/LFB-01|Levelling Field Book (Unit 1)">JKA/AKS/LFB-01 — Levelling Field Book (Unit 1)</option>
+              <option value="JKA/AKS/LFB-02|Levelling Field Book (Unit 2)">JKA/AKS/LFB-02 — Levelling Field Book (Unit 2)</option>
+              <option value="JKA/AKS/LFB-03|Levelling Field Book (Unit 3)">JKA/AKS/LFB-03 — Levelling Field Book (Unit 3)</option>
+              <option value="JKA/AKS/TFB-01|Traverse Field Book (Unit 1)">JKA/AKS/TFB-01 — Traverse Field Book (Unit 1)</option>
+              <option value="JKA/AKS/TFB-02|Traverse Field Book (Unit 2)">JKA/AKS/TFB-02 — Traverse Field Book (Unit 2)</option>
+              <option value="JKA/AKS/TFB-03|Traverse Field Book (Unit 3)">JKA/AKS/TFB-03 — Traverse Field Book (Unit 3)</option>
+              </optgroup>
+            </select>
+          </div>
+          <button class="btn btn-outline" onclick="tambahAlatPinjam()">+ Tambah ke Senarai</button>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Bil.</th><th>No. Siri Pendaftaran</th><th>Keterangan Aset</th><th>Status Kelulusan</th><th>Buang</th></tr>
+        </thead>
+        <tbody id="senarai-pinjam">
+          <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px;">Tiada alat dipilih lagi</td></tr>
+        </tbody>
+      </table>
+      <div class="form-actions" style="margin-top:16px;">
+        <button class="btn btn-primary" onclick="daftarPinjaman()">💾 Daftar Pinjaman</button>
+        <button class="btn btn-outline" onclick="cetakBorang()">🖨️ Cetak Borang KEW.PA-9</button>
+        <button class="btn btn-outline" onclick="resetPinjaman()">🔄 Reset</button>
+      </div>
+    </div>
+
+    <!-- Sejarah Pinjaman -->
+    <div class="table-wrap">
+      <div class="toolbar"><h3>📜 Rekod Pinjaman (Semua)</h3>
+        <input type="text" placeholder="Cari nama / no. permohonan..." style="width:220px;" />
+      </div>
+      <table>
+        <thead><tr><th>No. Perm.</th><th>Peminjam</th><th>Kursus</th><th>Alat</th><th>Tarikh Pinjam</th><th>Jangka Pulang</th><th>Status</th><th>Tindakan</th></tr></thead>
+        <tbody id="rekod-pinjam-tbody">
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       PAGE: PEMULANGAN
+  ══════════════════════════════════════════ -->
+  <div class="page" id="page-pulang">
+    <div class="page-title">Pemulangan Alat</div>
+    <div class="page-desc">Semak dan rekodkan pemulangan peralatan yang dipinjam</div>
+
+    <div class="alert info">ℹ️ Semak setiap alat sebelum disahkan. Rekodkan kondisi alat semasa dipulangkan.</div>
+
+    <div class="table-wrap" style="margin-bottom:20px;">
+      <div class="toolbar"><h3>🔄 Pinjaman Aktif — Menunggu Pemulangan</h3></div>
+      <table>
+        <thead>
+          <tr><th>No. Perm.</th><th>Peminjam</th><th>Alat</th><th>Tarikh Pinjam</th><th>Jangka Pulang</th><th>Status</th><th>Proses Pulang</th></tr>
+        </thead>
+        <tbody id="aktif-pulang-tbody">
+          <tr>
+            <td><strong>PA9-2025-001</strong></td>
+            <td>Kumpulan A — DCC20303</td>
+            <td>Total Station Nikon DTM-352 (KPT/PKK/H/03/318)</td>
+            <td>20/11/2025</td>
+            <td>20/11/2025 5:00ptg</td>
+            <td><span class="badge yellow">Aktif</span></td>
+            <td><button class="btn btn-success btn-sm" onclick="openModal('modal-pulang')">✔ Pulangkan</button></td>
+          </tr>
+          <tr>
+            <td><strong>PA9-2025-002</strong></td>
+            <td>Kumpulan B — DCC20303</td>
+            <td>Automatic Level Sokkia C330 (KPT/PKK/H/03/869)</td>
+            <td>20/11/2025</td>
+            <td>20/11/2025 5:00ptg</td>
+            <td><span class="badge yellow">Aktif</span></td>
+            <td><button class="btn btn-success btn-sm" onclick="openModal('modal-pulang')">✔ Pulangkan</button></td>
+          </tr>
+          <tr>
+            <td><strong>PA9-2025-003</strong></td>
+            <td>Kumpulan C — DCC20303</td>
+            <td>Digital Theodolite Sokkia DT600 (KPT/PKK/H/03/326)</td>
+            <td>19/11/2025</td>
+            <td>19/11/2025 5:00ptg</td>
+            <td><span class="badge red">Lewat</span></td>
+            <td><button class="btn btn-success btn-sm" onclick="openModal('modal-pulang')">✔ Pulangkan</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Rekod Pemulangan Selesai -->
+    <div class="table-wrap">
+      <div class="toolbar"><h3>✅ Rekod Pemulangan Selesai</h3></div>
+      <table>
+        <thead>
+          <tr><th>No. Perm.</th><th>Peminjam</th><th>Alat</th><th>Tarikh Pulang</th><th>Kondisi</th><th>Diterima Oleh</th></tr>
+        </thead>
+        <tbody id="rekod-pulang-tbody">
+          <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px;">Tiada rekod pemulangan selesai</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       PAGE: KALIBRASI & PENYELENGGARAAN
+  ══════════════════════════════════════════ -->
+  <div class="page" id="page-kalibrasi">
+    <div class="page-title">Kalibrasi & Penyelenggaraan</div>
+    <div class="page-desc">Rekod kalibrasi dan penyelenggaraan berkala peralatan (KEW.PA-14 / KEW.PA-15 / KEW.PA-16)</div>
+
+    <div class="alert danger">🔴 <strong>Kritikal:</strong> 8 unit alat ukur (Nikon DTM-352 & DTM-821) telah melebihi tempoh kalibrasi sejak Disember 2012. Tindakan segera diperlukan.</div>
+
+    <div class="cards">
+      <div class="card"><div class="label">Perlu Kalibrasi</div><div class="value red">8</div><div class="sub">Tindakan segera</div></div>
+      <div class="card"><div class="label">Jadual Tahun Ini</div><div class="value yellow">4</div><div class="sub">Penyelenggaraan berjadual</div></div>
+      <div class="card"><div class="label">Self Calibration</div><div class="value blue">12</div><div class="sub">Oleh Lab Officer</div></div>
+      <div class="card"><div class="label">Selesai Tahun Ini</div><div class="value green">0</div><div class="sub">Belum ada</div></div>
+    </div>
+
+    <div class="table-wrap" style="margin-bottom:20px;">
+      <div class="toolbar">
+        <h3>📋 Senarai Alat Perlu Kalibrasi (KEW.PA-14)</h3>
+        <button class="btn btn-primary" onclick="openModal('modal-kalibrasi')">+ Rekod Kalibrasi</button>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Bil</th><th>Jabatan</th><th>Jenis Aset</th><th>Jenama / Model</th><th>No. Siri</th><th>Tarikh Perolehan</th><th>Bil. Unit</th><th>Tarikh Akhir Selenggara</th><th>Kos (RM)</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td>JKA</td><td>Integrated Total Station</td><td>Nikon DTM-821</td><td>KPT/PKK/H/03/324</td><td>05/10/2003</td><td>1</td><td>14/12/2012</td><td>—</td><td><span class="badge red">Perlu Kalibrasi</span></td></tr>
+          <tr><td>2</td><td>JKA</td><td>Integrated Total Station</td><td>Nikon DTM-821</td><td>KPT/PKK/H/03/325</td><td>05/10/2003</td><td>1</td><td>14/12/2012</td><td>—</td><td><span class="badge red">Perlu Kalibrasi</span></td></tr>
+          <tr><td>3</td><td>JKA</td><td>Total Station (EDM)</td><td>Nikon DTM-352</td><td>KPT/PKK/H/03/318</td><td>05/10/2003</td><td>1</td><td>15/12/2012</td><td>—</td><td><span class="badge red">Perlu Kalibrasi</span></td></tr>
+          <tr><td>4</td><td>JKA</td><td>Total Station (EDM)</td><td>Nikon DTM-352</td><td>KPT/PKK/H/03/319</td><td>05/10/2003</td><td>1</td><td>15/12/2012</td><td>—</td><td><span class="badge red">Perlu Kalibrasi</span></td></tr>
+          <tr><td>5</td><td>JKA</td><td>Total Station (EDM)</td><td>Nikon DTM-352</td><td>KPT/PKK/H/03/320</td><td>05/10/2003</td><td>1</td><td>15/12/2012</td><td>—</td><td><span class="badge red">Perlu Kalibrasi</span></td></tr>
+          <tr><td>6</td><td>JKA</td><td>Total Station (EDM)</td><td>Nikon DTM-352</td><td>KPT/PKK/H/03/321</td><td>05/10/2003</td><td>1</td><td>15/12/2012</td><td>—</td><td><span class="badge red">Perlu Kalibrasi</span></td></tr>
+          <tr><td>7</td><td>JKA</td><td>Total Station (EDM)</td><td>Nikon DTM-352</td><td>KPT/PKK/H/03/322</td><td>05/10/2003</td><td>1</td><td>15/12/2012</td><td>—</td><td><span class="badge red">Perlu Kalibrasi</span></td></tr>
+          <tr><td>8</td><td>JKA</td><td>Total Station (EDM)</td><td>Nikon DTM-352</td><td>KPT/PKK/H/03/323</td><td>05/10/2003</td><td>1</td><td>15/12/2012</td><td>—</td><td><span class="badge red">Perlu Kalibrasi</span></td></tr>
+          <tr><td>9</td><td>JKA</td><td>Automatic Level</td><td>Sokkia C330</td><td>KPT/PKK/H/03/869–872</td><td>05/10/2003</td><td>4</td><td>—</td><td>—</td><td><span class="badge blue">Self Calibration</span></td></tr>
+          <tr><td>10</td><td>JKA</td><td>Electronic Digital Level</td><td>Sokkia SDL30</td><td>KPT/PKK/H/03/873–876</td><td>05/10/2003</td><td>4</td><td>—</td><td>—</td><td><span class="badge blue">Self Calibration</span></td></tr>
+          <tr><td>11</td><td>JKA</td><td>Digital Theodolite</td><td>Sokkia DT600</td><td>KPT/PKK/H/03/326–333</td><td>05/10/2003</td><td>8</td><td>—</td><td>—</td><td><span class="badge blue">Self Calibration</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       PAGE: SENARAI SEMAK MAKMAL
+  ══════════════════════════════════════════ -->
+  <div class="page" id="page-semak">
+    <div class="page-title">Senarai Semak Persediaan Makmal</div>
+    <div class="page-desc">Semakan berkala persediaan Makmal Ukur Kejuruteraan — L: Lengkap | TL: Tidak Lengkap | T: Tiada | TB: Tidak Berkenaan</div>
+
+    <div class="form-section">
+      <h3>📋 MAKLUMAT SEMAKAN</h3>
+      <div class="form-grid">
+        <div class="form-group"><label>Tarikh Semakan</label><input type="date" value="2025-11-20" /></div>
+        <div class="form-group"><label>Lokasi</label><input type="text" value="Makmal Ukur Kejuruteraan" readonly style="background:#f8fafc;" /></div>
+        <div class="form-group"><label>Diperiksa Oleh</label><input type="text" placeholder="Nama pegawai pemeriksa" /></div>
+        <div class="form-group"><label>Jawatan</label><input type="text" placeholder="cth: JK(O)3" /></div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="toolbar"><h3>✅ Senarai Semak Item Makmal</h3>
+        <button class="btn btn-primary" onclick="simpanSemak()">💾 Simpan Semakan</button>
+        <button class="btn btn-outline" onclick="cetakSemak()">🖨️ Cetak</button>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Bil.</th><th>Item</th><th style="width:130px;">Status</th><th>Catatan</th></tr>
+        </thead>
+        <tbody id="semak-tbody">
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       PAGE: LAPORAN
+  ══════════════════════════════════════════ -->
+  <div class="page" id="page-laporan">
+    <div class="page-title">Laporan & Statistik</div>
+    <div class="page-desc">Laporan penggunaan dan pengurusan peralatan makmal ukur</div>
+
+    <div class="cards">
+      <div class="card"><div class="label">Jumlah Pinjaman</div><div class="value blue" id="lap-jumlah">0</div></div>
+      <div class="card"><div class="label">Selesai Dipulangkan</div><div class="value green" id="lap-selesai">0</div></div>
+      <div class="card"><div class="label">Masih Dipinjam</div><div class="value yellow" id="lap-aktif">0</div></div>
+      <div class="card"><div class="label">Lewat Pulang</div><div class="value red" id="lap-lewat">0</div></div>
+    </div>
+
+    <div style="display:grid;gap:16px;grid-template-columns:1fr 1fr;margin-bottom:20px;">
+      <div class="form-section" style="margin-bottom:0;">
+        <h3>📊 Peralatan Paling Kerap Dipinjam</h3>
+        <table>
+          <thead><tr><th>Alat</th><th>Kekerapan</th><th>%</th></tr></thead>
+          <tbody>
+            <tr><td>Total Station Nikon DTM-352</td><td>18</td><td><div class="progress-bar"><div class="fill" style="width:90%;background:#2563eb;"></div></div></td></tr>
+            <tr><td>Automatic Level Sokkia C330</td><td>14</td><td><div class="progress-bar"><div class="fill" style="width:70%;background:#16a34a;"></div></div></td></tr>
+            <tr><td>Digital Theodolite Sokkia DT600</td><td>11</td><td><div class="progress-bar"><div class="fill" style="width:55%;background:#d97706;"></div></div></td></tr>
+            <tr><td>Electronic Level Sokkia SDL30</td><td>8</td><td><div class="progress-bar"><div class="fill" style="width:40%;background:#7c3aed;"></div></div></td></tr>
+            <tr><td>Walkie Talkie Motorola GP1200</td><td>7</td><td><div class="progress-bar"><div class="fill" style="width:35%;background:#0891b2;"></div></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="form-section" style="margin-bottom:0;">
+        <h3>📅 Pinjaman Mengikut Kursus</h3>
+        <table>
+          <thead><tr><th>Kursus</th><th>Bil. Pinjaman</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>DCC20303 — Ukur Kejuruteraan</td><td>3</td><td><span class="badge yellow">Aktif</span></td></tr>
+            <tr><td>Amali Traverse</td><td>0</td><td><span class="badge gray">Tiada</span></td></tr>
+            <tr><td>Amali Levelling</td><td>0</td><td><span class="badge gray">Tiada</span></td></tr>
+            <tr><td>Amali Setting Out</td><td>0</td><td><span class="badge gray">Tiada</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="toolbar">
+        <h3>📜 Laporan Penuh Peminjaman</h3>
+        <input type="date" style="width:140px;" />
+        <span style="color:var(--muted);font-size:12px;">hingga</span>
+        <input type="date" style="width:140px;" />
+        <button class="btn btn-outline">🔍 Tapis</button>
+        <button class="btn btn-primary">⬇️ Export PDF</button>
+      </div>
+      <table>
+        <thead><tr><th>No. Perm.</th><th>Peminjam</th><th>Kursus</th><th>Alat</th><th>Tarikh Pinjam</th><th>Tarikh Pulang</th><th>Kondisi</th><th>Status</th></tr></thead>
+        <tbody id="laporan-full-tbody">
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<!-- ══════════════════════════════════════════
+     MODAL: TAMBAH ASET
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-tambah-aset">
+  <div class="modal">
+    <h2>📦 Tambah Aset Baru (KEW.PA-1)</h2>
+    <div class="form-grid">
+      <div class="form-group"><label>No. Siri Pendaftaran</label><input type="text" placeholder="KPT/PKK/H/YY/XXX" /></div>
+      <div class="form-group"><label>Keterangan Aset</label><input type="text" placeholder="Nama penuh alat" /></div>
+      <div class="form-group"><label>Kategori</label>
+        <select><option>Theodolite</option><option>Automatic Level</option><option>Total Station</option><option>GPS</option><option>Kompas</option><option>Walkie Talkie</option><option>Lain-lain</option></select>
+      </div>
+      <div class="form-group"><label>Jenama / Model</label><input type="text" placeholder="cth: Sokkia DT600" /></div>
+      <div class="form-group"><label>Tarikh Perolehan</label><input type="date" /></div>
+      <div class="form-group"><label>Kuantiti</label><input type="text" placeholder="1" /></div>
+      <div class="form-group"><label>Tarikh Kalibrasi</label><input type="date" /></div>
+      <div class="form-group"><label>Lokasi Simpan</label><input type="text" placeholder="cth: Almari A, Rak 2" /></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-tambah-aset')">Batal</button>
+      <button class="btn btn-primary">💾 Simpan Aset</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     MODAL: PEMULANGAN
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-pulang">
+  <div class="modal">
+    <h2>🔄 Proses Pemulangan Alat (KEW.PA-9)</h2>
+    <div class="form-grid">
+      <div class="form-group"><label>No. Permohonan</label><input type="text" id="modal-pulang-no" readonly style="background:#f8fafc;" /></div>
+      <div class="form-group"><label>Peminjam</label><input type="text" id="modal-pulang-peminjam" readonly style="background:#f8fafc;" /></div>
+      <div class="form-group" style="grid-column:1/-1;"><label>Alat</label><input type="text" id="modal-pulang-alat" readonly style="background:#f8fafc;width:100%;" /></div>
+      <div class="form-group"><label>Tarikh Dipulangkan</label><input type="date" id="tarikh-pulang-modal" /></div>
+      <div class="form-group"><label>Masa Dipulangkan</label><input type="text" placeholder="cth: 4:30 ptg" /></div>
+      <div class="form-group"><label>Kondisi Alat</label>
+        <select id="kondisi-alat">
+          <option value="baik">✅ Baik — Tiada Kerosakan</option>
+          <option value="rosak-kecil">⚠️ Rosak Kecil — Boleh Guna</option>
+          <option value="rosak">❌ Rosak — Perlu Baiki</option>
+          <option value="hilang">🚫 Hilang</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Diterima Oleh</label><input type="text" id="modal-diterima" placeholder="Nama Lab Officer" /></div>
+    </div>
+    <div class="form-group" style="margin-top:10px;"><label>Catatan</label><textarea rows="3" placeholder="Nota kerosakan atau ulasan lain..."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-pulang')">Batal</button>
+      <button class="btn btn-success" onclick="sahPulang()">✔ Sahkan Pemulangan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     MODAL: REKOD KALIBRASI
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-kalibrasi">
+  <div class="modal">
+    <h2>🔧 Rekod Kalibrasi / Penyelenggaraan (KEW.PA-15)</h2>
+    <div class="form-grid">
+      <div class="form-group"><label>No. Siri Aset</label><input type="text" id="kali-siri" placeholder="KPT/PKK/H/..." /></div>
+      <div class="form-group"><label>Jenis Kerja</label>
+        <select id="kali-jenis"><option>Kalibrasi</option><option>Penyelenggaraan Berkala</option><option>Pembaikan</option></select>
+      </div>
+      <div class="form-group"><label>Tarikh Kerja</label><input type="date" id="kali-tarikh" /></div>
+      <div class="form-group"><label>Tarikh Akhir Seterusnya</label><input type="date" id="kali-seterus" /></div>
+      <div class="form-group"><label>Dilakukan Oleh</label><input type="text" id="kali-oleh" placeholder="Syarikat / Staf" /></div>
+      <div class="form-group"><label>Kos (RM)</label><input type="text" id="kali-kos" placeholder="0.00" /></div>
+    </div>
+    <div class="form-group" style="margin-top:10px;"><label>Penemuan / Catatan</label><textarea id="kali-catatan" rows="3" placeholder="Hasil semakan, kerosakan dijumpai..."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-kalibrasi')">Batal</button>
+      <button class="btn btn-primary" onclick="simpanKalibrasi()">💾 Simpan Rekod</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA ─────────────────────────────────────────────────────────────
+const ASET = [
+  {bil:1,siri:"KPT/PKK/H/03/326",nama:"Ten Second Electronic Digital Theodolite (Sokkia DT600)",kategori:"Theodolite",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:2,siri:"KPT/PKK/H/03/327",nama:"Ten Second Electronic Digital Theodolite (Sokkia DT600)",kategori:"Theodolite",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:3,siri:"KPT/PKK/H/03/328",nama:"Ten Second Electronic Digital Theodolite (Sokkia DT600)",kategori:"Theodolite",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:4,siri:"KPT/PKK/H/03/329",nama:"Ten Second Electronic Digital Theodolite (Sokkia DT600)",kategori:"Theodolite",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:5,siri:"KPT/PKK/H/03/330",nama:"Ten Second Electronic Digital Theodolite (Sokkia DT600)",kategori:"Theodolite",status:"dipinjam",kalibrasi:"Self Calibration"},
+  {bil:6,siri:"KPT/PKK/H/03/331",nama:"Ten Second Electronic Digital Theodolite (Sokkia DT600)",kategori:"Theodolite",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:7,siri:"KPT/PKK/H/03/332",nama:"Ten Second Electronic Digital Theodolite (Sokkia DT600)",kategori:"Theodolite",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:8,siri:"KPT/PKK/H/03/333",nama:"Ten Second Electronic Digital Theodolite (Sokkia DT600)",kategori:"Theodolite",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:9,siri:"KPT/PKK/H/03/350",nama:"Ten Second Micrometer Theodolite (Sokkia TM20E)",kategori:"Theodolite",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:10,siri:"KPT/PKK/H/03/351",nama:"Ten Second Micrometer Theodolite (Sokkia TM20E)",kategori:"Theodolite",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:11,siri:"KPT/PKK/H/03/352",nama:"Ten Second Micrometer Theodolite (Sokkia TM20E)",kategori:"Theodolite",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:12,siri:"KPT/PKK/H/03/353",nama:"Ten Second Micrometer Theodolite (Sokkia TM20E)",kategori:"Theodolite",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:13,siri:"KPT/PKK/H/03/354",nama:"Ten Second Micrometer Theodolite (Sokkia TM20E)",kategori:"Theodolite",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:14,siri:"KPT/PKK/H/03/355",nama:"Ten Second Micrometer Theodolite (Sokkia TM20E)",kategori:"Theodolite",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:15,siri:"KPT/PKK/H/03/356",nama:"Ten Second Micrometer Theodolite (Sokkia TM20E)",kategori:"Theodolite",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:16,siri:"KPT/PKK/H/03/357",nama:"Ten Second Micrometer Theodolite (Sokkia TM20E)",kategori:"Theodolite",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:17,siri:"KPT/PKK/H/03/869",nama:"Automatic Level (Sokkia C330)",kategori:"Automatic Level",status:"dipinjam",kalibrasi:"Self Calibration"},
+  {bil:18,siri:"KPT/PKK/H/03/870",nama:"Automatic Level (Sokkia C330)",kategori:"Automatic Level",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:19,siri:"KPT/PKK/H/03/871",nama:"Automatic Level (Sokkia C330)",kategori:"Automatic Level",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:20,siri:"KPT/PKK/H/03/872",nama:"Automatic Level (Sokkia C330)",kategori:"Automatic Level",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:21,siri:"KPT/PKK/H/03/873",nama:"Electronic Digital Level (Sokkia SDL30)",kategori:"Electronic Level",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:22,siri:"KPT/PKK/H/03/874",nama:"Electronic Digital Level (Sokkia SDL30)",kategori:"Electronic Level",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:23,siri:"KPT/PKK/H/03/875",nama:"Electronic Digital Level (Sokkia SDL30)",kategori:"Electronic Level",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:24,siri:"KPT/PKK/H/03/876",nama:"Electronic Digital Level (Sokkia SDL30)",kategori:"Electronic Level",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:25,siri:"KPT/PKK/H/03/877",nama:"Walkie Talkie Motorola GP1200",kategori:"Walkie Talkie",status:"tersedia",kalibrasi:"—"},
+  {bil:26,siri:"KPT/PKK/H/03/878",nama:"Walkie Talkie Motorola GP1200",kategori:"Walkie Talkie",status:"tersedia",kalibrasi:"—"},
+  {bil:27,siri:"KPT/PKK/H/03/879",nama:"Walkie Talkie Motorola GP1200",kategori:"Walkie Talkie",status:"tersedia",kalibrasi:"—"},
+  {bil:28,siri:"KPT/PKK/H/03/880",nama:"Walkie Talkie Motorola GP1200",kategori:"Walkie Talkie",status:"tersedia",kalibrasi:"—"},
+  {bil:29,siri:"KPT/PKK/H/03/881",nama:"Walkie Talkie Motorola GP1200",kategori:"Walkie Talkie",status:"tersedia",kalibrasi:"—"},
+  {bil:30,siri:"KPT/PKK/H/03/882",nama:"Walkie Talkie Motorola GP1200",kategori:"Walkie Talkie",status:"tersedia",kalibrasi:"—"},
+  {bil:31,siri:"KPT/PKK/H/03/883",nama:"Walkie Talkie Motorola GP1200",kategori:"Walkie Talkie",status:"tersedia",kalibrasi:"—"},
+  {bil:32,siri:"KPT/PKK/H/15/8",nama:"Walkie Talkie Kirisun PT3300",kategori:"Walkie Talkie",status:"tersedia",kalibrasi:"—"},
+  {bil:33,siri:"KPT/PKK/H/15/9",nama:"Walkie Talkie Kirisun PT3300",kategori:"Walkie Talkie",status:"tersedia",kalibrasi:"—"},
+  {bil:34,siri:"KPT/PKK/H/96/5",nama:"Automatic Level (Pentax AL-220)",kategori:"Automatic Level",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:35,siri:"KPT/PKK/H/96/6",nama:"Automatic Level (Pentax AL-220)",kategori:"Automatic Level",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:36,siri:"KPT/PKK/H/96/7",nama:"Automatic Level (Pentax AL-220)",kategori:"Automatic Level",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:37,siri:"KPT/PKK/H/96/8",nama:"Automatic Level (Pentax AL-220)",kategori:"Automatic Level",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:38,siri:"KPT/PKK/H/03/863",nama:"Dumpy Level (Sokkia TTL 6)",kategori:"Dumpy Level",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:39,siri:"KPT/PKK/H/03/864",nama:"Dumpy Level (Sokkia TTL 6)",kategori:"Dumpy Level",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:40,siri:"KPT/PKK/H/03/865",nama:"Dumpy Level (Sokkia TTL 6)",kategori:"Dumpy Level",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:41,siri:"KPT/PKK/H/03/866",nama:"Dumpy Level (Sokkia TTL 6)",kategori:"Dumpy Level",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:42,siri:"KPT/PKK/H/03/318",nama:"Total Station (Nikon DTM-352)",kategori:"Total Station",status:"dipinjam",kalibrasi:"Perlu Kalibrasi"},
+  {bil:43,siri:"KPT/PKK/H/03/319",nama:"Total Station (Nikon DTM-352)",kategori:"Total Station",status:"tersedia",kalibrasi:"Perlu Kalibrasi"},
+  {bil:44,siri:"KPT/PKK/H/03/320",nama:"Total Station (Nikon DTM-352)",kategori:"Total Station",status:"tersedia",kalibrasi:"Perlu Kalibrasi"},
+  {bil:45,siri:"KPT/PKK/H/03/321",nama:"Total Station (Nikon DTM-352)",kategori:"Total Station",status:"tersedia",kalibrasi:"Perlu Kalibrasi"},
+  {bil:46,siri:"KPT/PKK/H/03/322",nama:"Total Station (Nikon DTM-352)",kategori:"Total Station",status:"tersedia",kalibrasi:"Perlu Kalibrasi"},
+  {bil:47,siri:"KPT/PKK/H/03/323",nama:"Total Station (Nikon DTM-352)",kategori:"Total Station",status:"tersedia",kalibrasi:"Perlu Kalibrasi"},
+  {bil:48,siri:"KPT/PKK/H/03/324",nama:"Integrated Total Station (Nikon DTM-821)",kategori:"Total Station",status:"tersedia",kalibrasi:"Perlu Kalibrasi"},
+  {bil:49,siri:"KPT/PKK/H/03/325",nama:"Integrated Total Station (Nikon DTM-821)",kategori:"Total Station",status:"tersedia",kalibrasi:"Perlu Kalibrasi"},
+  {bil:50,siri:"KPT/PKK/H/03/867",nama:"Color Plotter",kategori:"Lain-lain",status:"tersedia",kalibrasi:"—"},
+  {bil:51,siri:"KPT/PKK/H/03/868",nama:"Color Plotter",kategori:"Lain-lain",status:"tersedia",kalibrasi:"—"},
+  {bil:52,siri:"KPT/PKK/H/98/39",nama:"Altimeter / Zeiss Dini 21",kategori:"Altimeter",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:53,siri:"KPT/PKK/H/98/40",nama:"Altimeter / Zeiss Dini 21",kategori:"Altimeter",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:54,siri:"KPT/PKK/H/98/41",nama:"Altimeter / Zeiss Dini 21",kategori:"Altimeter",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:55,siri:"KPT/PKK/H/98/42",nama:"Altimeter / Zeiss Dini 21",kategori:"Altimeter",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:56,siri:"KPT/PKK/H/03/342",nama:"Digital Planimeter Sokkia KP-90N",kategori:"Digital Planimeter",status:"tersedia",kalibrasi:"—"},
+  {bil:57,siri:"KPT/PKK/H/03/343",nama:"Digital Planimeter Sokkia KP-90N",kategori:"Digital Planimeter",status:"tersedia",kalibrasi:"—"},
+  {bil:58,siri:"KPT/PKK/H/03/344",nama:"Digital Planimeter Sokkia KP-90N",kategori:"Digital Planimeter",status:"tersedia",kalibrasi:"—"},
+  {bil:59,siri:"KPT/PKK/H/03/345",nama:"Digital Planimeter Sokkia KP-90N",kategori:"Digital Planimeter",status:"tersedia",kalibrasi:"—"},
+  {bil:60,siri:"KPT/PKK/H/03/346",nama:"Digital Planimeter Sokkia KP-90N",kategori:"Digital Planimeter",status:"tersedia",kalibrasi:"—"},
+  {bil:61,siri:"KPT/PKK/H/03/347",nama:"Digital Planimeter Sokkia KP-90N",kategori:"Digital Planimeter",status:"tersedia",kalibrasi:"—"},
+  {bil:62,siri:"KPT/PKK/H/03/348",nama:"Digital Planimeter Sokkia KP-90N",kategori:"Digital Planimeter",status:"tersedia",kalibrasi:"—"},
+  {bil:63,siri:"KPT/PKK/H/03/349",nama:"Digital Planimeter Sokkia KP-90N",kategori:"Digital Planimeter",status:"tersedia",kalibrasi:"—"},
+  {bil:64,siri:"KPT/PKK/H/96/14",nama:"Kompas Sokkia PC2",kategori:"Kompas",status:"tersedia",kalibrasi:"—"},
+  {bil:65,siri:"KPT/PKK/H/98/37",nama:"Automatic Level Theis Model N5(E)",kategori:"Automatic Level",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:66,siri:"KPT/PKK/H/98/38",nama:"Automatic Level Theis Model N5(E)",kategori:"Automatic Level",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:67,siri:"KPT/PKK/H/03/902",nama:"Laser Printer HP LaserJet 5500",kategori:"Lain-lain",status:"tersedia",kalibrasi:"—"},
+  {bil:68,siri:"KPT/PKK/H/03/904",nama:"Laser Printer HP LaserJet 5500",kategori:"Lain-lain",status:"tersedia",kalibrasi:"—"},
+  {bil:69,siri:"KPT/PKK/H/96/9",nama:"Digital Theodolite 20 Sec (Pentax ET-H-20F)",kategori:"Theodolite",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:70,siri:"KPT/PKK/H/98/31",nama:"Automatic Level (FG 040 Germany)",kategori:"Automatic Level",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:71,siri:"KPT/PKK/H/98/34",nama:"Automatic Level (FG 040 Germany)",kategori:"Automatic Level",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:72,siri:"KPT/PKK/H/98/35",nama:"Automatic Level (FG 040 Germany)",kategori:"Automatic Level",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:73,siri:"KPT/PKK/H/98/36",nama:"Automatic Level (FG 040 Germany)",kategori:"Automatic Level",status:"tersedia",kalibrasi:"Self Calibration"},
+  {bil:74,siri:"KPT/PKK/H/03/942",nama:"Color Scanner",kategori:"Lain-lain",status:"tersedia",kalibrasi:"—"},
+  {bil:75,siri:"KPT/PKK/H/03/943",nama:"Color Scanner",kategori:"Lain-lain",status:"tersedia",kalibrasi:"—"},
+  {bil:76,siri:"KPT/PKK/H/15/10",nama:"GPS Garmin Montana 650",kategori:"GPS",status:"tersedia",kalibrasi:"—"},
+  {bil:77,siri:"KPT/PKK/H/15/11",nama:"GPS Garmin Montana 650",kategori:"GPS",status:"tersedia",kalibrasi:"—"},
+  {bil:78,siri:"KPT/PKK/H/14/87",nama:"Prismatic Compass Stanley London",kategori:"Kompas",status:"tersedia",kalibrasi:"—"},
+  {bil:79,siri:"KPT/PKK/H/14/88",nama:"Prismatic Compass Stanley London",kategori:"Kompas",status:"tersedia",kalibrasi:"—"},
+  {bil:80,siri:"KPT/PKK/H/12/58",nama:"Surveying Compass Pocket DQL-8",kategori:"Kompas",status:"tersedia",kalibrasi:"—"},
+  {bil:81,siri:"KPT/PKK/H/12/59",nama:"Surveying Compass Pocket DQL-8",kategori:"Kompas",status:"tersedia",kalibrasi:"—"},
+  {bil:82,siri:"KPT/PKK/H/12/60",nama:"Surveying Compass Pocket DQL-8",kategori:"Kompas",status:"tersedia",kalibrasi:"—"},
+  {bil:83,siri:"KPT/PKK/H/12/61",nama:"Surveying Compass Pocket DQL-8",kategori:"Kompas",status:"tersedia",kalibrasi:"—"},
+  // ── AKSESORI AMALI (tiada no. KEW.PA) ──
+  {bil:84,siri:"JKA/AKS/TRP-01",nama:"Tripod (Unit 1)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:85,siri:"JKA/AKS/TRP-02",nama:"Tripod (Unit 2)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:86,siri:"JKA/AKS/TRP-03",nama:"Tripod (Unit 3)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:87,siri:"JKA/AKS/TRP-04",nama:"Tripod (Unit 4)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:88,siri:"JKA/AKS/TRP-05",nama:"Tripod (Unit 5)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:89,siri:"JKA/AKS/TRP-06",nama:"Tripod (Unit 6)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:90,siri:"JKA/AKS/LST-01",nama:"Levelling Staff (Unit 1)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:91,siri:"JKA/AKS/LST-02",nama:"Levelling Staff (Unit 2)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:92,siri:"JKA/AKS/LST-03",nama:"Levelling Staff (Unit 3)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:93,siri:"JKA/AKS/LST-04",nama:"Levelling Staff (Unit 4)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:94,siri:"JKA/AKS/LST-05",nama:"Levelling Staff (Unit 5)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:95,siri:"JKA/AKS/LST-06",nama:"Levelling Staff (Unit 6)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:96,siri:"JKA/AKS/PRM-01",nama:"Prism / Reflector (Unit 1)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:97,siri:"JKA/AKS/PRM-02",nama:"Prism / Reflector (Unit 2)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:98,siri:"JKA/AKS/PRM-03",nama:"Prism / Reflector (Unit 3)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:99,siri:"JKA/AKS/PRM-04",nama:"Prism / Reflector (Unit 4)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:100,siri:"JKA/AKS/PRM-05",nama:"Prism / Reflector (Unit 5)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:101,siri:"JKA/AKS/PRM-06",nama:"Prism / Reflector (Unit 6)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:102,siri:"JKA/AKS/RRP-01",nama:"Ranging Rod / Pole (Unit 1)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:103,siri:"JKA/AKS/RRP-02",nama:"Ranging Rod / Pole (Unit 2)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:104,siri:"JKA/AKS/RRP-03",nama:"Ranging Rod / Pole (Unit 3)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:105,siri:"JKA/AKS/RRP-04",nama:"Ranging Rod / Pole (Unit 4)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:106,siri:"JKA/AKS/RRP-05",nama:"Ranging Rod / Pole (Unit 5)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:107,siri:"JKA/AKS/RRP-06",nama:"Ranging Rod / Pole (Unit 6)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:108,siri:"JKA/AKS/SFB-01",nama:"Staff Bubble (Unit 1)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:109,siri:"JKA/AKS/SFB-02",nama:"Staff Bubble (Unit 2)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:110,siri:"JKA/AKS/SFB-03",nama:"Staff Bubble (Unit 3)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:111,siri:"JKA/AKS/SFB-04",nama:"Staff Bubble (Unit 4)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:112,siri:"JKA/AKS/MTP-01",nama:"Measuring Tape 30m (Unit 1)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:113,siri:"JKA/AKS/MTP-02",nama:"Measuring Tape 30m (Unit 2)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:114,siri:"JKA/AKS/MTP-03",nama:"Measuring Tape 50m (Unit 1)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:115,siri:"JKA/AKS/MTP-04",nama:"Measuring Tape 50m (Unit 2)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:116,siri:"JKA/AKS/ARW-01",nama:"Arrow (Set 1)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:117,siri:"JKA/AKS/ARW-02",nama:"Arrow (Set 2)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:118,siri:"JKA/AKS/ARW-03",nama:"Arrow (Set 3)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:119,siri:"JKA/AKS/PEG-01",nama:"Wooden Pickets / Peg (Set 1)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:120,siri:"JKA/AKS/PEG-02",nama:"Wooden Pickets / Peg (Set 2)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:121,siri:"JKA/AKS/PEG-03",nama:"Wooden Pickets / Peg (Set 3)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:122,siri:"JKA/AKS/HMR-01",nama:"Hammer (Unit 1)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:123,siri:"JKA/AKS/HMR-02",nama:"Hammer (Unit 2)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:124,siri:"JKA/AKS/HMR-03",nama:"Hammer (Unit 3)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:125,siri:"JKA/AKS/LFB-01",nama:"Levelling Field Book (Unit 1)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:126,siri:"JKA/AKS/LFB-02",nama:"Levelling Field Book (Unit 2)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:127,siri:"JKA/AKS/LFB-03",nama:"Levelling Field Book (Unit 3)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:128,siri:"JKA/AKS/TFB-01",nama:"Traverse Field Book (Unit 1)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:129,siri:"JKA/AKS/TFB-02",nama:"Traverse Field Book (Unit 2)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+  {bil:130,siri:"JKA/AKS/TFB-03",nama:"Traverse Field Book (Unit 3)",kategori:"Aksesori",status:"tersedia",kalibrasi:"—"},
+];
+
+const SEMAK_ITEMS = [
+  "KEW.PA-7 (Daftar Harta Modal / ABR)",
+  "Banner \"UTAMAKAN KESELAMATAN\"",
+  "Poster \"SAFETY AWARENESS\" (sekurang-kurangnya 2 keping)",
+  "Peraturan Am Makmal / Bengkel",
+  "Garisan Kuning (Zon Larangan)",
+  "Garisan Hijau (Laluan Selamat)",
+  "Senarai Kumpulan Pelajar",
+  "Jadual Makmal / Bengkel",
+  "SOP Peralatan / Mesin",
+  "Susunan & Kekemasan Penyimpanan Peralatan",
+  "Poster SOP Covid-19",
+  "Borang KEW.PA-9 (Borang Pinjaman)",
+  "Borang Aduan Kerosakan (KEW.PA-10)",
+  "Borang Pemeriksaan Berkala (KEW.PA-11)",
+  "Alat Pemadam Api",
+  "Kotak Pertolongan Cemas",
+  "Label / Tag Peralatan",
+  "Kad Stok / Inventori Terkini",
+];
+
+// ── localStorage HELPERS ───────────────────────────────────────
+const LS = {
+  get(key, def) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch(e) { return def; } },
+  set(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {} },
+};
+
+// ── DATA (dari localStorage, dengan data contoh sebagai lalai) ──
+const PINJAM_DEFAULT = [
+  {no:"PA9-2025-001",peminjam:"Kumpulan A — DCC20303",kursus:"DCC20303",alat:"Total Station Nikon DTM-352",siriAlat:"KPT/PKK/H/03/318",tarikh:"20/11/2025",jangka:"20/11/2025 5ptg",status:"aktif",kondisi:"",diterima:"",tarikhPulang:""},
+  {no:"PA9-2025-002",peminjam:"Kumpulan B — DCC20303",kursus:"DCC20303",alat:"Automatic Level Sokkia C330",siriAlat:"KPT/PKK/H/03/869",tarikh:"20/11/2025",jangka:"20/11/2025 5ptg",status:"aktif",kondisi:"",diterima:"",tarikhPulang:""},
+  {no:"PA9-2025-003",peminjam:"Kumpulan C — DCC20303",kursus:"DCC20303",alat:"Digital Theodolite Sokkia DT600",siriAlat:"KPT/PKK/H/03/330",tarikh:"19/11/2025",jangka:"19/11/2025 5ptg",status:"lewat",kondisi:"",diterima:"",tarikhPulang:""},
+];
+
+let rekodPinjam = LS.get('mkj_pinjam', PINJAM_DEFAULT);
+let rekodPulang = LS.get('mkj_pulang', []);
+let rekodKalibrasi = LS.get('mkj_kalibrasi', []);
+let semakData = LS.get('mkj_semak', {});
+let asetStatus = LS.get('mkj_aset_status', {});  // {siri: status}
+const pinjamList = [];
+
+// Simpan status aset ke localStorage dan kemas ASET array
+function syncAsetStatus() {
+  ASET.forEach(a => { if(asetStatus[a.siri]) a.status = asetStatus[a.siri]; });
+}
+
+function simpanAsetStatus() {
+  const s = {};
+  ASET.forEach(a => { s[a.siri] = a.status; });
+  asetStatus = s;
+  LS.set('mkj_aset_status', s);
+}
+
+// Kemas status aset berdasarkan pinjaman aktif
+function refreshAsetDariPinjaman() {
+  // Reset semua ke tersedia dulu
+  ASET.forEach(a => { a.status = 'tersedia'; });
+  // Tandakan yang aktif/lewat sebagai dipinjam
+  rekodPinjam.filter(r => r.status === 'aktif' || r.status === 'lewat').forEach(r => {
+    const siriList = r.siriAlat ? r.siriAlat.split(',').map(s => s.trim()) : [];
+    siriList.forEach(siri => {
+      const aset = ASET.find(a => a.siri === siri);
+      if(aset) aset.status = 'dipinjam';
+    });
+  });
+  simpanAsetStatus();
+}
+
+// Kira nombor pinjaman baharu
+function noRefBaharu() {
+  const thn = new Date().getFullYear();
+  const bil = rekodPinjam.length + 1;
+  return 'PA9-' + thn + '-' + String(bil).padStart(3,'0');
+}
+
+// Kemaskini badge dan stats dashboard
+function refreshBadges() {
+  const aktif = rekodPinjam.filter(r => r.status==='aktif'||r.status==='lewat').length;
+  const kalib = 8; // tetap 8 unit Nikon belum dikalibrasi
+  document.getElementById('badge-pinjam').textContent = aktif;
+  document.getElementById('badge-kalib').textContent = kalib;
+}
+
+// ── NAVIGATION ─────────────────────────────────────────────────
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelectorAll('nav a').forEach(a => {
+    if (a.getAttribute('onclick') && a.getAttribute('onclick').includes("'"+id+"'")) a.classList.add('active');
+  });
+  refreshAsetDariPinjaman();
+  if (id === 'inventori') renderInventori(ASET);
+  if (id === 'pinjam') renderRekodPinjam();
+  if (id === 'pulang') renderAktifPulang();
+  if (id === 'semak') renderSemak();
+  if (id === 'laporan') renderLaporan();
+  if (id === 'dashboard') renderDashboard();
+}
+
+// ── MODAL ──────────────────────────────────────────────────────
+let modalPulangNo = '';
+function openModal(id, noRef) {
+  document.getElementById(id).classList.add('open');
+  if (id === 'modal-pulang') {
+    const today = new Date().toISOString().slice(0,10);
+    document.getElementById('tarikh-pulang-modal').value = today;
+    modalPulangNo = noRef || '';
+    const r = rekodPinjam.find(x => x.no === modalPulangNo);
+    if(r) {
+      document.getElementById('modal-pulang-no').value = r.no;
+      document.getElementById('modal-pulang-peminjam').value = r.peminjam;
+      document.getElementById('modal-pulang-alat').value = r.alat;
+    }
+  }
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); }));
+
+// ── INVENTORI ──────────────────────────────────────────────────
+function statusBadge(s) {
+  if(s==='tersedia') return '<span class="badge green">Tersedia</span>';
+  if(s==='dipinjam') return '<span class="badge yellow">Dipinjam</span>';
+  if(s==='rosak') return '<span class="badge red">Rosak</span>';
+  return '<span class="badge gray">'+s+'</span>';
+}
+function kaliBadge(k) {
+  if(k==='Perlu Kalibrasi') return '<span class="badge red">Perlu Kalibrasi</span>';
+  if(k==='Self Calibration') return '<span class="badge blue">Self Calibration</span>';
+  return '<span class="badge gray">'+k+'</span>';
+}
+
+function renderInventori(data) {
+  const tb = document.getElementById('inventori-tbody');
+  if(!tb) return;
+  tb.innerHTML = data.length ? data.map(a => `<tr>
+    <td>${a.bil}</td>
+    <td style="font-family:monospace;font-size:12px;">${a.siri}</td>
+    <td>${a.nama}</td>
+    <td><span class="badge gray">${a.kategori}</span></td>
+    <td>${statusBadge(a.status)}</td>
+    <td>${kaliBadge(a.kalibrasi)}</td>
+    <td><button class="btn btn-outline btn-sm" onclick="lihatAset('${a.siri}')">Lihat</button></td>
+  </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px;">Tiada rekod ditemui</td></tr>';
+}
+
+function filterInventori() {
+  const cari = document.getElementById('cari-inventori').value.toLowerCase();
+  const kat = document.getElementById('filter-kategori').value;
+  const data = ASET.filter(a =>
+    (!cari || a.siri.toLowerCase().includes(cari) || a.nama.toLowerCase().includes(cari)) &&
+    (!kat || a.kategori === kat)
+  );
+  renderInventori(data);
+}
+
+function lihatAset(siri) {
+  const a = ASET.find(x => x.siri === siri);
+  if(!a) return;
+  const pinjaman = rekodPinjam.filter(r => r.siriAlat && r.siriAlat.includes(siri));
+  alert('📦 MAKLUMAT ASET\n\nNo. Siri: ' + a.siri + '\nNama: ' + a.nama + '\nKategori: ' + a.kategori +
+        '\nStatus: ' + a.status + '\nKalibrasi: ' + a.kalibrasi +
+        '\n\nJumlah Pinjaman: ' + pinjaman.length + ' kali');
+}
+
+// ── PEMINJAMAN ─────────────────────────────────────────────────
+function tambahAlatPinjam() {
+  const sel = document.getElementById('pilih-alat');
+  const val = sel.value;
+  if(!val) return alert('Sila pilih alat terlebih dahulu.');
+  const [siri, nama] = val.split('|');
+  if(pinjamList.find(x => x.siri===siri)) return alert('Alat ini sudah ada dalam senarai.');
+  pinjamList.push({siri, nama});
+  renderPinjamList();
+  sel.value = '';
+}
+
+function renderPinjamList() {
+  const tb = document.getElementById('senarai-pinjam');
+  if(!pinjamList.length) {
+    tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px;">Tiada alat dipilih lagi</td></tr>';
+    return;
+  }
+  tb.innerHTML = pinjamList.map((a,i) => `<tr>
+    <td>${i+1}</td>
+    <td style="font-family:monospace;font-size:12px;">${a.siri}</td>
+    <td>${a.nama}</td>
+    <td><span class="badge green">Lulus</span></td>
+    <td><button class="btn btn-danger btn-sm" onclick="buangPinjam(${i})">✕</button></td>
+  </tr>`).join('');
+}
+
+function buangPinjam(i) { pinjamList.splice(i,1); renderPinjamList(); }
+
+function daftarPinjaman() {
+  const nama = document.getElementById('nama-pemohon').value.trim();
+  if(!nama) { alert('Sila isi Nama Pemohon.'); return; }
+  if(!pinjamList.length) { alert('Sila tambah sekurang-kurangnya satu alat.'); return; }
+  const noRef = noRefBaharu();
+  const entri = {
+    no: noRef,
+    peminjam: nama,
+    kursus: document.getElementById('kursus').value,
+    alat: pinjamList.map(x=>x.nama).join(', '),
+    siriAlat: pinjamList.map(x=>x.siri).join(', '),
+    tarikh: new Date().toLocaleDateString('ms-MY'),
+    jangka: document.getElementById('jangka-pulang').value + ' ' + document.getElementById('masa-pulang').value,
+    status: 'aktif',
+    kondisi: '', diterima: '', tarikhPulang: ''
+  };
+  rekodPinjam.unshift(entri);
+  LS.set('mkj_pinjam', rekodPinjam);
+  refreshAsetDariPinjaman();
+  pinjamList.length = 0;
+  renderPinjamList();
+  renderRekodPinjam();
+  refreshBadges();
+  renderDashboard();
+  alert('✅ Pinjaman ' + noRef + ' telah didaftarkan dan disimpan.');
+}
+
+function resetPinjaman() {
+  pinjamList.length = 0;
+  renderPinjamList();
+  document.getElementById('nama-pemohon').value = '';
+  document.getElementById('tujuan').value = '';
+  document.getElementById('tempat').value = '';
+}
+
+function cetakBorang() { window.print(); }
+
+function renderRekodPinjam() {
+  const tb = document.getElementById('rekod-pinjam-tbody');
+  if(!tb) return;
+  tb.innerHTML = rekodPinjam.length ? rekodPinjam.map(r => {
+    const badge = r.status==='aktif' ? '<span class="badge yellow">Aktif</span>' :
+                  r.status==='lewat' ? '<span class="badge red">Lewat</span>' :
+                  '<span class="badge green">Selesai</span>';
+    return `<tr>
+      <td><strong>${r.no}</strong></td><td>${r.peminjam}</td><td>${r.kursus}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.alat}">${r.alat}</td>
+      <td>${r.tarikh}</td><td>${r.jangka}</td><td>${badge}</td>
+      <td>${r.status!=='selesai' ? '<button class="btn btn-success btn-sm" onclick="openModal(\'modal-pulang\',\''+r.no+'\')">Pulang</button>' : '✔'}</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px;">Tiada rekod pinjaman</td></tr>';
+}
+
+// ── PEMULANGAN ─────────────────────────────────────────────────
+function renderAktifPulang() {
+  const tb = document.getElementById('aktif-pulang-tbody');
+  if(!tb) return;
+  const aktif = rekodPinjam.filter(r => r.status==='aktif' || r.status==='lewat');
+  tb.innerHTML = aktif.length ? aktif.map(r => {
+    const badge = r.status==='lewat' ? '<span class="badge red">Lewat</span>' : '<span class="badge yellow">Aktif</span>';
+    return `<tr>
+      <td><strong>${r.no}</strong></td><td>${r.peminjam}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.alat}">${r.alat}</td>
+      <td>${r.tarikh}</td><td>${r.jangka}</td><td>${badge}</td>
+      <td><button class="btn btn-success btn-sm" onclick="openModal('modal-pulang','${r.no}')">✔ Pulangkan</button></td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px;">Tiada pinjaman aktif</td></tr>';
+
+  const tb2 = document.getElementById('rekod-pulang-tbody');
+  if(!tb2) return;
+  tb2.innerHTML = rekodPulang.length ? rekodPulang.map(p => {
+    const badge = p.kondisi==='baik' ? '<span class="badge green">Baik</span>' :
+                  p.kondisi==='rosak-kecil' ? '<span class="badge yellow">Rosak Kecil</span>' :
+                  p.kondisi==='rosak' ? '<span class="badge red">Rosak</span>' :
+                  '<span class="badge red">Hilang</span>';
+    return `<tr><td><strong>${p.no}</strong></td><td>${p.peminjam}</td><td>${p.alat}</td><td>${p.tarikhPulang}</td><td>${badge}</td><td>${p.diterima}</td></tr>`;
+  }).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px;">Tiada rekod pemulangan selesai</td></tr>';
+}
+
+function sahPulang() {
+  const r = rekodPinjam.find(x => x.no === modalPulangNo);
+  if(!r) { closeModal('modal-pulang'); return; }
+  const kondisi = document.getElementById('kondisi-alat').value;
+  const diterima = document.getElementById('modal-diterima').value.trim() || 'Lab Officer';
+  const tarikhPulang = document.getElementById('tarikh-pulang-modal').value
+    ? new Date(document.getElementById('tarikh-pulang-modal').value).toLocaleDateString('ms-MY')
+    : new Date().toLocaleDateString('ms-MY');
+
+  // Kemaskini rekod pinjaman
+  r.status = 'selesai';
+  r.kondisi = kondisi;
+  r.diterima = diterima;
+  r.tarikhPulang = tarikhPulang;
+  LS.set('mkj_pinjam', rekodPinjam);
+
+  // Tambah ke rekod pulang
+  rekodPulang.unshift({ no: r.no, peminjam: r.peminjam, alat: r.alat, siriAlat: r.siriAlat, tarikhPulang, kondisi, diterima });
+  LS.set('mkj_pulang', rekodPulang);
+
+  // Tandakan aset rosak jika perlu
+  if(kondisi === 'rosak') {
+    const siriList = r.siriAlat ? r.siriAlat.split(',').map(s => s.trim()) : [];
+    siriList.forEach(siri => { const a = ASET.find(x => x.siri === siri); if(a) a.status = 'rosak'; });
+  }
+
+  refreshAsetDariPinjaman();
+  closeModal('modal-pulang');
+  renderAktifPulang();
+  refreshBadges();
+  renderDashboard();
+  alert('✅ Pemulangan ' + r.no + ' telah direkodkan dan disimpan.');
+}
+
+// ── DASHBOARD ──────────────────────────────────────────────────
+function renderDashboard() {
+  const aktif = rekodPinjam.filter(r => r.status==='aktif'||r.status==='lewat');
+  const tb = document.getElementById('dash-pinjam-tbody');
+  if(!tb) return;
+  tb.innerHTML = aktif.length ? aktif.map(r => {
+    const badge = r.status==='lewat' ? '<span class="badge red">Lewat</span>' : '<span class="badge yellow">Aktif</span>';
+    return `<tr>
+      <td><strong>${r.no}</strong></td><td>${r.peminjam}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;" title="${r.alat}">${r.alat}</td>
+      <td>${r.tarikh}</td><td>${r.jangka}</td><td>${badge}</td>
+      <td><button class="btn btn-success btn-sm" onclick="openModal('modal-pulang','${r.no}')">Pulang</button></td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px;">Tiada pinjaman aktif</td></tr>';
+}
+
+// ── SENARAI SEMAK ──────────────────────────────────────────────
+function renderSemak() {
+  const tb = document.getElementById('semak-tbody');
+  if(!tb) return;
+  tb.innerHTML = SEMAK_ITEMS.map((item,i) => {
+    const saved = semakData[i] || {};
+    const opts = ['','L','TL','T','TB'].map(v => `<option value="${v}" ${saved.status===v?'selected':''}>${
+      v===''?'— Pilih —':v==='L'?'✅ L — Lengkap':v==='TL'?'⚠️ TL — Tdk Lengkap':v==='T'?'❌ T — Tiada':'— TB — Tdk Berkenaan'
+    }</option>`).join('');
+    return `<tr>
+      <td>${i+1}</td>
+      <td>${item}</td>
+      <td><select style="width:150px;" onchange="updateSemakRow(this,${i})">${opts}</select></td>
+      <td><input type="text" placeholder="Catatan..." style="width:100%;" value="${saved.catatan||''}" onchange="updateSemakCatatan(this,${i})" /></td>
+    </tr>`;
+  }).join('');
+}
+
+function updateSemakRow(sel, i) {
+  if(!semakData[i]) semakData[i] = {};
+  semakData[i].status = sel.value;
+  LS.set('mkj_semak', semakData);
+}
+
+function updateSemakCatatan(inp, i) {
+  if(!semakData[i]) semakData[i] = {};
+  semakData[i].catatan = inp.value;
+  LS.set('mkj_semak', semakData);
+}
+
+function simpanSemak() {
+  LS.set('mkj_semak', semakData);
+  alert('✅ Senarai semak disimpan. Data akan kekal walaupun browser ditutup.');
+}
+function cetakSemak() { window.print(); }
+
+// ── REKOD KALIBRASI ────────────────────────────────────────────
+function simpanKalibrasi() {
+  const siri = document.getElementById('kali-siri').value.trim();
+  const jenis = document.getElementById('kali-jenis').value;
+  const tarikh = document.getElementById('kali-tarikh').value;
+  const tarikhSeterus = document.getElementById('kali-seterus').value;
+  const oleh = document.getElementById('kali-oleh').value.trim();
+  const kos = document.getElementById('kali-kos').value.trim();
+  const catatan = document.getElementById('kali-catatan').value.trim();
+  if(!siri||!tarikh) { alert('Sila isi No. Siri dan Tarikh.'); return; }
+  rekodKalibrasi.unshift({ siri, jenis, tarikh, tarikhSeterus, oleh, kos, catatan });
+  LS.set('mkj_kalibrasi', rekodKalibrasi);
+  closeModal('modal-kalibrasi');
+  alert('✅ Rekod kalibrasi disimpan.');
+}
+
+// ── LAPORAN ────────────────────────────────────────────────────
+function renderLaporan() {
+  const tb = document.getElementById('laporan-full-tbody');
+  if(!tb) return;
+  tb.innerHTML = rekodPinjam.length ? rekodPinjam.map(r => {
+    const badge = r.status==='aktif' ? '<span class="badge yellow">Aktif</span>' :
+                  r.status==='lewat' ? '<span class="badge red">Lewat</span>' :
+                  '<span class="badge green">Selesai</span>';
+    return `<tr><td>${r.no}</td><td>${r.peminjam}</td><td>${r.kursus}</td><td>${r.alat}</td>
+      <td>${r.tarikh}</td><td>${r.tarikhPulang||'—'}</td>
+      <td>${r.kondisi||'—'}</td><td>${badge}</td></tr>`;
+  }).join('') : '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px;">Tiada rekod</td></tr>';
+
+  // Update stats
+  const aktif = rekodPinjam.filter(r=>r.status==='aktif'||r.status==='lewat').length;
+  const selesai = rekodPinjam.filter(r=>r.status==='selesai').length;
+  const lewat = rekodPinjam.filter(r=>r.status==='lewat').length;
+  document.getElementById('lap-jumlah').textContent = rekodPinjam.length;
+  document.getElementById('lap-selesai').textContent = selesai;
+  document.getElementById('lap-aktif').textContent = aktif;
+  document.getElementById('lap-lewat').textContent = lewat;
+}
+
+function resetSemuaData() {
+  if(!confirm('⚠️ AMARAN: Ini akan PADAM SEMUA data pinjaman, pemulangan dan semak yang disimpan. Inventori aset tidak akan terjejas. Teruskan?')) return;
+  localStorage.removeItem('mkj_pinjam');
+  localStorage.removeItem('mkj_pulang');
+  localStorage.removeItem('mkj_kalibrasi');
+  localStorage.removeItem('mkj_semak');
+  localStorage.removeItem('mkj_aset_status');
+  location.reload();
+}
+
+// ── INIT ───────────────────────────────────────────────────────
+(function init() {
+  const today = new Date().toISOString().slice(0,10);
+  const dp = document.getElementById('tarikh-pinjam');
+  const jp = document.getElementById('jangka-pulang');
+  if(dp) dp.value = today;
+  if(jp) jp.value = today;
+  refreshAsetDariPinjaman();
+  refreshBadges();
+  renderDashboard();
+})();
+</script>
+</body>
+</html>
